@@ -9,6 +9,12 @@ const Sidebar = ({ expand, setexpand }) => {
   const {openSignIn} = useClerk()
   const {user} = useAppContext()
   const [openmenu, setopenmenu] = useState({id: 0, open: false})
+  
+  const handleSignIn = () => {
+    if (!user) {
+      openSignIn()
+    }
+  }
   return (
     <div
       className={`
@@ -131,17 +137,36 @@ const Sidebar = ({ expand, setexpand }) => {
 
           {/* Profile */}
           <div
-          onClick={user ? null: openSignIn}
+            onClick={handleSignIn}
             className={`
-              flex items-center cursor-pointer
+              flex items-center ${user ? 'cursor-default' : 'cursor-pointer'}
               ${expand
-                ? 'hover:bg-white/10 p-2 rounded-lg gap-3'
-                : 'h-10 w-10 mx-auto hover:bg-gray-500/30 rounded-lg justify-center'}
+                ? `${user ? '' : 'hover:bg-white/10'} p-2 rounded-lg gap-3`
+                : `h-10 w-10 mx-auto ${user ? '' : 'hover:bg-gray-500/30'} rounded-lg justify-center`}
             `}
           >
-            {user ? <UserButton/> :
-            <Image src={assets.profile_icon} alt="profile" className='w-7' />}
-            {expand && <span className='text-white/70 text-sm'>My Profile</span>}
+            {user ? (
+              <UserButton 
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: "w-7 h-7",
+                    userButtonPopoverCard: "bg-[#2a2d35] border border-white/10",
+                    userButtonPopoverActionButton: "text-white hover:bg-white/10",
+                    userButtonPopoverActionButtonText: "text-white",
+                    userButtonPopoverFooter: "hidden"
+                  }
+                }}
+                userProfileMode="modal"
+                afterSignOutUrl="/"
+              />
+            ) : (
+              <Image src={assets.profile_icon} alt="profile" className='w-7' />
+            )}
+            {expand && (
+              <span className='text-white/70 text-sm'>
+                {user ? 'Profile' : 'Sign In'}
+              </span>
+            )}
           </div>
         </div>
       </div>
