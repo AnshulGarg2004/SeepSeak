@@ -9,9 +9,10 @@ export const useAppContext = () => {
 }
 
 export const AppContextProvider = ({children}) => {
-    const {user} = useUser
+    const {user, isLoaded} = useUser();
     const value = {
-        user
+        user,
+        isLoaded
     }
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }

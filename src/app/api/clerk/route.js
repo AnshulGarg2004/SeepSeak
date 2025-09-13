@@ -5,40 +5,52 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
-    const wh = new Webhook(process.env.SIGNING_SECRET)
-    const headerPayload = await headers();
-    const svixHeaders = {
-        'svix-id': headerPayload.get('svix-id'),
-        'svix-timestamp' : headerPayload.get('svix-timestamp'),
-        'svix-signature': headerPayload.get('svix-signature')
-    }
-
-    //connect payload and verify it
-    const payload = await req.json();
-    const body = JSON.stringify(payload)
-    const {data, type} = wh.verify(body, svixHeaders);
-
-    //prepare the user data to be saved in database
-    const userData = {
-        _id: data.id,
-        email: data.email_addresses[0].email_addresses,
-        name:`${data.first_name} ${data.last_name}`,
-        image: data.image_url,
-
-    };
-    await Conncetdb();
-
-    switch(type) {
-        case 'user.created':
-            await User.create(userData);
-            break;
-        case 'user.updated':
-            await User.findByIdAndUpdate(data.id, userData);
-            break;
-        case 'user.deleted':
-            await User.findByIdAndDelete(data.id);
-        default:
-            break;
+    try {
+        const wh = new Webhook(process.env.SIGNING_SECRET)
+        const headerPayload = await headers();
+        const svixHeaders = {
+            'svix-id': headerPayload.get('svix-id'),
+            'svix-timestamp' : headerPayload.get('svix-timestamp'),
+            'svix-signature': headerPayload.get('svix-signature')
         }
-        return NextResponse.json({message: 'Event received'}, {status: 201})
+
+        const payload = await req.json();
+        const body = JSON.stringify(payload)
+        const {data, type} = wh.verify(body, svixHeaders);
+
+        console.log('Webhook event:', type, data);
+        
+        const userData = {
+            _id: data.id,
+            email: data.email_addresses?.[0]?.email_address || data.primary_email_address_id,
+            name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown User',
+            image: data.image_url || ''
+        };
+        
+        console.log('User data to save:', userData);
+        
+        await Conncetdb();
+
+        switch(type) {
+            case 'user.created':
+                const newUser = await User.create(userData);
+                console.log('User created:', newUser);
+                break;
+            case 'user.updated':
+                const updatedUser = await User.findByIdAndUpdate(data.id, userData, { new: true });
+                console.log('User updated:', updatedUser);
+                break;
+            case 'user.deleted':
+                const deletedUser = await User.findByIdAndDelete(data.id);
+                console.log('User deleted:', deletedUser);
+                break;
+            default:
+                console.log('Unknown event type:', type);
+                break;
+        }
+        return NextResponse.json({message: 'Event received'}, {status: 200})
+    } catch (error) {
+        console.error('Webhook error:', error);
+        return NextResponse.json({error: 'Webhook failed'}, {status: 400})
+    }
 }

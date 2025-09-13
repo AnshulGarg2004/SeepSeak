@@ -1,17 +1,18 @@
 import { assets } from '@/assets/assets';
 import { useAppContext } from '@/context/AppContext';
-import { useClerk, UserButton } from '@clerk/nextjs';
+import { useClerk, UserButton, useUser } from '@clerk/nextjs';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import ChatLabel from './ChatLabel';
 
 const Sidebar = ({ expand, setexpand }) => {
   const {openSignIn} = useClerk()
+  const {isSignedIn} = useUser()
   const {user} = useAppContext()
   const [openmenu, setopenmenu] = useState({id: 0, open: false})
   
   const handleSignIn = () => {
-    if (!user) {
+    if (!isSignedIn) {
       openSignIn()
     }
   }
@@ -152,11 +153,14 @@ const Sidebar = ({ expand, setexpand }) => {
                     userButtonAvatarBox: "w-7 h-7",
                     userButtonPopoverCard: "bg-[#2a2d35] border border-white/10",
                     userButtonPopoverActionButton: "text-white hover:bg-white/10",
-                    userButtonPopoverActionButtonText: "text-white",
-                    userButtonPopoverFooter: "hidden"
+                    userButtonPopoverActionButtonText: "text-white"
                   }
                 }}
-                userProfileMode="modal"
+                userProfileProps={{
+                  additionalOAuthScopes: {
+                    google: ['https://www.googleapis.com/auth/userinfo.email']
+                  }
+                }}
                 afterSignOutUrl="/"
               />
             ) : (
