@@ -7,8 +7,7 @@ const ChatSchema = new mongoose.Schema(
     messages: [
       {
         role: { type: String, enum: ['user', 'assistant'], required: true },
-        content: { type: String, required: true },
-        timestamp: { type: Date, default: Date.now }
+        content: { type: String, required: true }
       }
     ]
   },

@@ -1,12 +1,12 @@
 import User from "@/models/User";
 import { Webhook } from "svix";
-import Conncetdb from "@/config/db";
+import ConnectDb from "@/config/db";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
     try {
-        const wh = new Webhook(process.env.SIGNING_SECRET)
+        const wh = new Webhook(process.env.SIGNING_SECRET || process.env.CLERK_WEBHOOK_SECRET)
         const headerPayload = await headers();
         const svixHeaders = {
             'svix-id': headerPayload.get('svix-id'),
@@ -18,18 +18,16 @@ export async function POST(req) {
         const body = JSON.stringify(payload)
         const {data, type} = wh.verify(body, svixHeaders);
 
-        console.log('Webhook event:', type, data);
+        await ConnectDb();
         
         const userData = {
             _id: data.id,
-            email: data.email_addresses?.[0]?.email_address || data.primary_email_address_id,
-            name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown User',
+            email: data.email_addresses?.[0]?.email_address,
+            name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
             image: data.image_url || ''
         };
         
-        console.log('User data to save:', userData);
         
-        await Conncetdb();
 
         switch(type) {
             case 'user.created':

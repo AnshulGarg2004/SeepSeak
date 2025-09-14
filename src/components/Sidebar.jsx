@@ -5,11 +5,11 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import ChatLabel from './ChatLabel';
 
-const Sidebar = ({ expand, setexpand }) => {
+const Sidebar = ({ expand, setExpand }) => {
   const {openSignIn} = useClerk()
   const {isSignedIn} = useUser()
-  const {user} = useAppContext()
-  const [openmenu, setopenmenu] = useState({id: 0, open: false})
+  const {user, chats, createNewChat} = useAppContext()
+  const [openMenu, setOpenMenu] = useState({id: 0, open: false})
   
   const handleSignIn = () => {
     if (!isSignedIn) {
@@ -41,7 +41,7 @@ const Sidebar = ({ expand, setexpand }) => {
 
           {/* Toggle Button */}
           <div
-            onClick={() => setexpand(!expand)}
+            onClick={() => setExpand(!expand)}
             className={`group relative flex items-center justify-center hover:bg-gray-500/20 transition-all duration-300 h-10 w-10 rounded-lg cursor-pointer ${expand ? '' : 'mt-0'}`}
           >
             <Image src={assets.menu_icon} alt="menu icon" className="md:hidden w-6 h-6" />
@@ -75,6 +75,7 @@ const Sidebar = ({ expand, setexpand }) => {
 
         {/* New Chat Button */}
         <button
+          onClick={() => window.location.reload()}
           className={`flex items-center justify-center cursor-pointer ${
             expand
               ? 'bg-primary hover:opacity-90 rounded-2xl gap-2 p-2.5 w-max'
@@ -101,7 +102,9 @@ const Sidebar = ({ expand, setexpand }) => {
         {/* Recents */}
         <div className={`mt-8 text-white/25 text-sm ${expand ? 'block' : 'hidden'}`}>
           <p className='my-1'>Recents</p>
-          <ChatLabel openmenu={openmenu} setopenmenu={setopenmenu}/>
+          {chats.map((chat, index) => (
+            <ChatLabel key={index} openMenu={openMenu} setOpenMenu={setOpenMenu} id={chat.id} name={chat.name} />
+          ))}
         </div>
       </div>
 
